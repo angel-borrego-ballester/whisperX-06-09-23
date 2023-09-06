@@ -239,7 +239,7 @@ class SubtitlesWriter(ResultWriter):
             # the next subtitle to yield (a list of word timings with whitespace)
             subtitle: list[dict] = []
             times = []
-            last = result["segments"][0]["start"]
+            last = None
             for segment in result["segments"]:
                 for i, original_timing in enumerate(segment["words"]):
                     timing = original_timing.copy()
@@ -255,22 +255,13 @@ class SubtitlesWriter(ResultWriter):
                         line_len += len(timing["word"])
                     else:
                         # new line
-                        timing["word"] = timing["word"].strip()
-                        if (
-                            len(subtitle) > 0
-                            and max_line_count is not None
-                            and (long_pause or line_count >= max_line_count)
-                            or seg_break
-                        ):
-                            # subtitle break
+                        if len(subtitle) > 0:
                             yield subtitle, times
                             subtitle = []
                             times = []
                             line_count = 1
-                        elif line_len > 0:
-                            # line break
-                            line_count += 1
-                            timing["word"] = "\n" + timing["word"]
+                        elif last is not None:
+                            times[-1] = (last, times[-1][1], times[-1][2])  # Update end time of the previous line
                         line_len = len(timing["word"].strip())
                     subtitle.append(timing)
                     times.append((segment["start"], segment["end"], segment.get("speaker")))
