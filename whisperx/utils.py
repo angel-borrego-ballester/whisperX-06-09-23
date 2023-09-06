@@ -268,22 +268,22 @@ class SubtitlesWriter(ResultWriter):
                             times = []
                             line_count = 1
                         elif line_len > 0:
-                            # line break
                             line_count += 1
-                            while len(timing["word"]) > max_line_width:
-                                # Split the line into multiple subtitles
-                                split_point = max_line_width
-                                while split_point > 0 and timing["word"][split_point] != ' ':
-                                    split_point -= 1
-                                if split_point == 0:
-                                    split_point = max_line_width  # If no space found, split at max_line_width
-                                subtitle.append(timing.copy())
-                                subtitle[-1]["word"] = timing["word"][:split_point]
-                                times.append((last, last + (split_point / 1000), None))
-                                timing["word"] = timing["word"][split_point:]
-                            if len(timing["word"].strip()) > 0:
-                                subtitle.append(timing)
-                                times.append((last, last + (len(timing["word"].strip()) / 1000), None))
+                            words = timing["word"].split()
+                            for word in words:
+                                word_len = len(word)
+                                if line_len + word_len <= max_line_width:
+                                    subtitle.append({"word": word})
+                                    times.append((last, last + (len(word.strip()) / 1000), None))
+                                    line_len += word_len
+                                else:
+                                    # Start a new line with the current word
+                                    subtitle.append({"word": word})
+                                    times.append((last, last + (len(word.strip()) / 1000), None))
+                                    yield subtitle, times
+                                    subtitle = []
+                                    times = []
+                                    line_len = 0
                             line_len = 0
                         line_len = len(timing["word"].strip())
                     subtitle.append(timing)
