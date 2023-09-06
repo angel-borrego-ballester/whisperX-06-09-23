@@ -241,8 +241,13 @@ class SubtitlesWriter(ResultWriter):
             times = []
             last = result["segments"][0]["start"]
             for segment in result["segments"]:
+                segment_start = self.format_timestamp(segment["start"])
                 for i, original_timing in enumerate(segment["words"]):
                     timing = original_timing.copy()
+                    # forzar nuevo subtítulo en cada nuevo tiempo
+                    if i == 0 or timing["start"] != previous_start:
+                        yield segment_start, None, ""  
+                        segment_start = self.format_timestamp(timing["start"])
                     long_pause = not preserve_segments
                     if "start" in timing:
                         long_pause = long_pause and timing["start"] - last > 3.0
@@ -276,6 +281,7 @@ class SubtitlesWriter(ResultWriter):
                     times.append((segment["start"], segment["end"], segment.get("speaker")))
                     if "start" in timing:
                         last = timing["start"]
+                        previous_start = timing["start"]
             if len(subtitle) > 0:
                 yield subtitle, times
 
