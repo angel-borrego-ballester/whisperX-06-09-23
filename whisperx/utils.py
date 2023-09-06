@@ -224,7 +224,7 @@ class SubtitlesWriter(ResultWriter):
         raw_max_line_width: Optional[int] = options["max_line_width"]
         max_line_count: Optional[int] = options["max_line_count"]
         highlight_words: bool = options["highlight_words"]
-        max_line_width = 100 if raw_max_line_width is None else raw_max_line_width
+        max_line_width = 1000 if raw_max_line_width is None else raw_max_line_width
         preserve_segments = max_line_count is None or raw_max_line_width is None
         
         if len(result["segments"]) == 0:
@@ -268,23 +268,9 @@ class SubtitlesWriter(ResultWriter):
                             times = []
                             line_count = 1
                         elif line_len > 0:
+                            # line break
                             line_count += 1
-                            words = timing["word"].split()
-                            for word in words:
-                                word_len = len(word)
-                                if line_len + word_len <= max_line_width:
-                                    subtitle.append({"word": word})
-                                    times.append((last, last + (len(word.strip()) / 1000), None))
-                                    line_len += word_len
-                                else:
-                                    # Start a new line with the current word
-                                    subtitle.append({"word": word})
-                                    times.append((last, last + (len(word.strip()) / 1000), None))
-                                    yield subtitle, times
-                                    subtitle = []
-                                    times = []
-                                    line_len = 0
-                            line_len = 0
+                            timing["word"] = "\n" + timing["word"]
                         line_len = len(timing["word"].strip())
                     subtitle.append(timing)
                     times.append((segment["start"], segment["end"], segment.get("speaker")))
